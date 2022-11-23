@@ -1,0 +1,78 @@
+stages:
+  - checking
+  - testing
+  - building
+  - deployment
+
+unit-tests:
+  stage: testing
+  tags:
+    - arm
+  image: $NEXUS_REGISTRY/drone_osdk_ros
+  script:
+    # create dir and copy files
+    - mkdir -p /home/buildenv/catkin_ws/src
+    - cp -r * /home/buildenv/catkin_ws/src
+    # environmental variables
+    - cd /home/buildenv/catkin_ws
+    - source /opt/ros/$(ls /opt/ros)/setup.bash
+    # build with tests
+    - roscore & catkin_make run_tests --cmake-args -DBUILD_UNIT_TESTS=ON
+    # running tests
+    - ./devel/lib/hive_dji_bridge/hive_dji_bridge_tests
+
+build-test-deb-package:
+  stage: building
+  tags:
+    - arm
+  except:
+    - release
+  image: $NEXUS_REGISTRY/drone_osdk_ros
+  script:
+    # create dir and copy files
+    - mkdir -p /home/buildenv/packages
+    - mkdir -p /home/buildenv/catkin_ws/src
+    - cp -r * /home/buildenv/catkin_ws/src
+    # environmental variables
+    - cd /home/buildenv/catkin_ws
+    - source /opt/ros/$(ls /opt/ros)/setup.bash
+    # build
+    - cd /home/buildenv/catkin_ws/src
+    - >
+      for dir in `ls -d */`; do
+        cd ${dir}
+        bloom-generate rosdebian --ros-distro $(ls /opt/ros)
+        fakeroot debian/rules binary
+        dpkg -i ../*.deb
+        cp ../*.deb /home/buildenv/packages
+        rm ../*.deb -rf
+        cd ..
+      done
+
+deploy-deb-package:
+  stage: deployment
+  tags:
+    - arm
+  only:
+    - release
+  image: $NEXUS_REGISTRY/drone_osdk_ros
+  script:
+    # create dir and copy files
+    - mkdir -p /home/buildenv/packages
+    - mkdir -p /home/buildenv/catkin_ws/src
+    - cp -r * /home/buildenv/catkin_ws/src
+    # environmental variables
+    - cd /home/buildenv/catkin_ws
+    - source /opt/ros/$(ls /opt/ros)/setup.bash
+    # build
+    - cd /home/buildenv/catkin_ws/src
+    - >
+      for dir in `ls -d */`; do
+        cd ${dir}
+        bloom-generate rosdebian --ros-distro $(ls /opt/ros)
+        fakeroot debian/rules binary
+        dpkg -i ../*.deb
+        cp ../*.deb /home/buildenv/packages
+        rm ../*.deb -rf
+        cd ..
+      done

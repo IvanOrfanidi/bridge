@@ -1,0 +1,18 @@
+#pragma once
+
+#include <dji_osdk_ros/SetRtkEnable.h>
+
+#include <application/ros_service_client.hpp>
+#include <commands/command.hpp>
+
+class SetRtkEnable
+  : public Command
+  , public RosServiceClient<dji_osdk_ros::SetRtkEnable> {
+public:
+    explicit SetRtkEnable(const CommandId& id, const CommandPayload& payload)
+      : Command(id, payload)
+      , RosServiceClient(RosServiceName{"/dji_osdk_ros/set_rtk_enable"}) {
+    }
+
+    void execute() override;
+};

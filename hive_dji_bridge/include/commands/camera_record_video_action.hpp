@@ -1,0 +1,18 @@
+#pragma once
+
+#include <dji_osdk_ros/CameraRecordVideoAction.h>
+
+#include <application/ros_service_client.hpp>
+#include <commands/command.hpp>
+
+class CameraRecordVideoAction
+  : public Command
+  , public RosServiceClient<dji_osdk_ros::CameraRecordVideoAction> {
+public:
+    explicit CameraRecordVideoAction(const CommandId& id, const CommandPayload& payload)
+      : Command(id, payload)
+      , RosServiceClient(RosServiceName{"/camera_record_video_action"}) {
+    }
+
+    void execute() override;
+};

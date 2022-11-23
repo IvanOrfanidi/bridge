@@ -1,0 +1,11 @@
+#!/bin/sh
+
+adduser --system --group dji
+touch /home/dji/.drone_setup
+chown dji:dji /home/dji/.drone_setup
+
+chmod +x /opt/ros/$(ls /opt/ros)/bin/*.sh
+
+systemctl enable roslaunch.service
+systemctl enable ssh_tunnel.service
+systemctl enable wifi_connect.service

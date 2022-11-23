@@ -1,0 +1,4 @@
+<launch>
+  <param name="gateway_url" type="string" value="$(optenv GATEWAY_URL http://moscow1.testing.hive.aero:5000)"/>
+  <include file="/home/dji/catkin_ws/src/hive_dji_bridge/launch/dji_vehicle_node.launch"/>
+</launch>

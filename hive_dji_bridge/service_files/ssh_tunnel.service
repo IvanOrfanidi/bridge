@@ -1,0 +1,13 @@
+[Unit]
+Description=ssh tunnel service
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=dji
+ExecStart=/bin/bash /opt/ros/kinetic/bin/ssh_tunnel.sh
+
+[Install]
+WantedBy=multi-user.target

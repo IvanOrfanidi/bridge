@@ -1,0 +1,13 @@
+<launch>
+  <node pkg="dji_osdk_ros" type="dji_vehicle_node" name="vehicle_node" output="screen" respawn="true">
+    <param name="acm_name" type="string" value="/dev/ttyACM0"/>
+    <param name="serial_name" type="string" value="/dev/ttyTHS2"/>
+    <param name="baud_rate" type="int" value="1000000"/>
+    <param name="app_id" type="int" value="1093482"/>
+    <param name="app_version" type="int" value="1"/>
+    <param name="align_time" type="bool" value="false"/>
+    <param name="enc_key" type="string" value="ffcc68b3a1d33aa0954f455a168cd830effc9517c31ec5d4091298147a79af12"/>
+    <param name="use_broadcast" type="bool" value="false"/>
+    <param name="disable_400hz" type="bool" value="false"/>
+  </node>
+</launch>

@@ -1,0 +1,8 @@
+<launch>
+  <param name="gateway_url" type="string" value="$(optenv GATEWAY_URL http://moscow1.testing.hive.aero:5000)"/>
+
+  <include file="$(find hive_dji_bridge)/launch/dji_vehicle_node.launch"/>
+
+  <node name="hive_dji_bridge" pkg="hive_dji_bridge" type="hive_dji_bridge" output="screen" respawn="true">
+  </node>
+</launch>

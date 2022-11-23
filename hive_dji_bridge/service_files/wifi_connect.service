@@ -1,0 +1,12 @@
+[Unit]
+Description=wifi connect service
+
+[Service]
+Type=simple
+User=root
+Restart=always
+RestartSec=2s
+ExecStart=/bin/bash /opt/ros/kinetic/bin/wifi_connect.sh
+
+[Install]
+WantedBy=multi-user.target
