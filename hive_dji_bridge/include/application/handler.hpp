@@ -34,9 +34,9 @@ public:
 
     void attachCommandQueue(const std::shared_ptr<drone::multithread::queue<std::shared_ptr<Command>>>);
 
-    void attachSubscriber(const std::shared_ptr<Subscriber>& subscriber);
+    void attachSubscriber(const std::shared_ptr<Subscriber> subscriber);
 
-    void detachSubscriber(const std::shared_ptr<Subscriber>& subscriber);
+    void detachSubscriber(const std::shared_ptr<Subscriber> subscriber);
 
     void testSubscriberCallback(int);
 
@@ -86,10 +86,8 @@ private:
 
     std::unordered_multimap<std::type_index, std::weak_ptr<Subscriber>> _subscribers{};
 
+    mutable std::mutex _mutexForCommandQueue{};
     mutable std::mutex _mutexForSubscribers{};
-
-    std::mutex _mutexForInitialize{};
-    bool _wasInitialized = false;
 
     std::shared_ptr<drone::multithread::queue<std::shared_ptr<Command>>> _commandQueue{};
 
@@ -97,5 +95,7 @@ private:
 
     std::thread _threadServicePool;
     std::thread _threadCommandPool;
+
+    std::atomic_flag _lockInitialized = ATOMIC_FLAG_INIT;
     std::atomic_flag _lockServicePool = ATOMIC_FLAG_INIT;
 };

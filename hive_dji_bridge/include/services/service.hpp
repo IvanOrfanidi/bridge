@@ -7,6 +7,8 @@
 
 class Service {
 public:
+    virtual ~Service() = default;
+
     virtual bool update() = 0;
 
     virtual std::type_index getResultTypeCallback() = 0;

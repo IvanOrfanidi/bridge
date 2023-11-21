@@ -26,13 +26,11 @@ Handler& Handler::instance() {
 }
 
 void Handler::initialize() {
-    std::lock_guard<std::mutex> lock(_mutexForInitialize);
-    if (_wasInitialized) {
+    if (_lockInitialized.test_and_set()) {
         return;
     }
 
     createDjiSubscribe();
-    _wasInitialized = true;
 }
 
 void Handler::start(std::shared_future<void> future) {
@@ -42,16 +40,19 @@ void Handler::start(std::shared_future<void> future) {
 
 void Handler::commandPool(std::shared_future<void> future) {
     while (future.wait_for(0ms) == std::future_status::timeout) {
-        while (!_commandQueue->empty()) {
-            _lockServicePool.test_and_set(); // Block service pool update
-            std::shared_ptr<Command> command;
-            _commandQueue->try_pop(command);
-            if (command != nullptr) {
-                command->execute();
-                notifyResult(command->getResultTypeCallback(), command->getData());
+        {
+            std::lock_guard<std::mutex> lock(_mutexForCommandQueue);
+            while (!_commandQueue->empty()) {
+                _lockServicePool.test_and_set(); // Block service pool update
+                std::shared_ptr<Command> command;
+                _commandQueue->try_pop(command);
+                if (command != nullptr) {
+                    command->execute();
+                    notifyResult(command->getResultTypeCallback(), command->getData());
+                }
             }
+            _lockServicePool.clear();
         }
-        _lockServicePool.clear();
 
         ros::Duration(0.005).sleep();
     }
@@ -70,10 +71,11 @@ void Handler::servicePool(std::shared_future<void> future) {
 }
 
 void Handler::attachCommandQueue(const std::shared_ptr<drone::multithread::queue<std::shared_ptr<Command>>> commandQueue) {
-    _commandQueue = commandQueue;
+    std::lock_guard<std::mutex> lock(_mutexForCommandQueue);
+    _commandQueue = std::move(commandQueue);
 }
 
-void Handler::attachSubscriber(const std::shared_ptr<Subscriber>& subscriber) {
+void Handler::attachSubscriber(const std::shared_ptr<Subscriber> subscriber) {
     std::lock_guard<std::mutex> lock(_mutexForSubscribers);
     const auto type = subscriber->getType();
     const auto& [beginSubscriber, endSubscriber] = _subscribers.equal_range(type);
@@ -83,7 +85,7 @@ void Handler::attachSubscriber(const std::shared_ptr<Subscriber>& subscriber) {
     _subscribers.insert({type, subscriber});
 }
 
-void Handler::detachSubscriber(const std::shared_ptr<Subscriber>& subscriber) {
+void Handler::detachSubscriber(const std::shared_ptr<Subscriber> subscriber) {
     std::lock_guard<std::mutex> lock(_mutexForSubscribers);
     const auto& [beginSubscriber, endSubscriber] = _subscribers.equal_range(subscriber->getType());
     for (auto it = beginSubscriber; it != endSubscriber; ++it) {
